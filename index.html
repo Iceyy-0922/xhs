@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书网页版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --brand-red: #FF2442;
+            --brand-red-hover: #E01F3A;
+            --bg-white: #FFFFFF;
+            --bg-light: #F5F5F5;
+            --bg-hover: #FAFAFA;
+            --bg-selected: #FFF5F7;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border-color: #EEEEEE;
+            --online-green: #00C853;
+            --sidebar-width: 200px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* 主布局容器 */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧一级导航栏 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-area {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo {
+            width: 28px;
+            height: 28px;
+            background: var(--brand-red);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--brand-red);
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .nav-item.active {
+            background: var(--bg-selected);
+            color: var(--brand-red);
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--brand-red);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .nav-text {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .nav-unread-badge {
+            position: absolute;
+            top: 10px;
+            left: 28px;
+            min-width: 16px;
+            height: 16px;
+            background: var(--brand-red);
+            border-radius: 8px;
+            border: 2px solid var(--bg-white);
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 主内容区 */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 顶部搜索栏 */
+        .header {
+            height: var(--header-height);
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            border-radius: 20px;
+            padding: 8px 16px;
+        }
+
+        .search-icon {
+            color: var(--text-tertiary);
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-btn {
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            color: var(--brand-red);
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 发现页面 - 卡片流 */
+        .discover-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card-image {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+
+        .card-info {
+            padding: 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 6px;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 消息页面 - 顶部大tab */
+        .message-page-header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .message-main-tabs {
+            display: flex;
+            gap: 32px;
+        }
+
+        .message-main-tab {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px 0;
+            position: relative;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message-main-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .message-main-tab.active {
+            color: var(--brand-red);
+        }
+
+        .message-main-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -17px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--brand-red);
+            border-radius: 2px;
+        }
+
+        .main-tab-badge {
+            background: var(--brand-red);
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* 消息内容区 */
+        .message-content-area {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+
+        /* 我的对话布局 - 左侧列表+右侧详情 */
+        .message-layout-private {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 系统通知布局 - 全宽平铺 */
+        .message-layout-system {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 左侧消息列表面板 */
+        .message-panel {
+            width: 320px;
+            background: var(--bg-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* 工具栏 */
+        .chat-toolbar {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-conversations {
+            flex: 1;
+        }
+
+        .search-conversations input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .search-conversations input:focus {
+            border-color: var(--brand-red);
+        }
+
+        .dropdown-wrapper {
+            position: relative;
+        }
+
+        .dropdown-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-white);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dropdown-btn:hover {
+            border-color: var(--brand-red);
+            color: var(--brand-red);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+            min-width: 120px;
+            z-index: 10;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .dropdown-item.active {
+            color: var(--brand-red);
+            font-weight: 500;
+        }
+
+        .toolbar-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-white);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .toolbar-btn:hover {
+            border-color: var(--brand-red);
+            color: var(--brand-red);
+        }
+
+        .new-chat-btn {
+            background: var(--brand-red);
+            color: white;
+            border: none;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--brand-red-hover);
+        }
+
+        /* 对话列表 */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .chat-list-item {
+            display: flex;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-list-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .chat-list-item.active {
+            background: var(--bg-selected);
+        }
+
+        .chat-list-item.unread .chat-name,
+        .chat-list-item.unread .chat-preview {
+            font-weight: 600;
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-name {
+            font-size: 14px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+        }
+
+        .chat-preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        .unread-count {
+            background: var(--brand-red);
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .chat-actions {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            gap: 4px;
+            background: var(--bg-hover);
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .chat-list-item:hover .chat-actions {
+            display: flex;
+        }
+
+        .chat-list-item:hover .chat-time,
+        .chat-list-item:hover .unread-count {
+            display: none;
+        }
+
+        .action-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .action-icon:hover {
+            background: var(--bg-light);
+            color: var(--brand-red);
+        }
+
+        .pinned-tag {
+            position: absolute;
+            left: 12px;
+            top: 8px;
+            background: var(--brand-red);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* 右侧对话详情 */
+        .chat-detail-panel {
+            flex: 1;
+            background: var(--bg-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            overflow: hidden;
+        }
+
+        .chat-user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .chat-user-name {
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .chat-user-name:hover {
+            color: var(--brand-red);
+        }
+
+        .chat-status {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--online-green);
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-action-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-white);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .header-action-btn:hover {
+            border-color: var(--brand-red);
+            color: var(--brand-red);
+        }
+
+        .follow-btn {
+            background: var(--brand-red);
+            color: white;
+            border: none;
+        }
+
+        .follow-btn:hover {
+            background: var(--brand-red-hover);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-light);
+        }
+
+        .messages-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-timestamp {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .message-row.own {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .message-content {
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message-row:not(.own) .message-bubble {
+            background: var(--bg-white);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-row.own .message-bubble {
+            background: var(--brand-red);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-status {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-align: right;
+        }
+
+        .input-area {
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
+            background: var(--bg-white);
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .tool-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .tool-btn:hover {
+            background: var(--bg-hover);
+            color: var(--brand-red);
+        }
+
+        .input-box {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .text-input {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .text-input:focus {
+            border-color: var(--brand-red);
+        }
+
+        .send-btn {
+            padding: 10px 20px;
+            background: var(--brand-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            height: 44px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--brand-red-hover);
+        }
+
+        .send-btn:disabled {
+            background: var(--border-color);
+            color: var(--text-tertiary);
+            cursor: not-allowed;
+        }
+
+        .quick-replies {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-reply {
+            padding: 6px 12px;
+            background: var(--bg-light);
+            border-radius: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .quick-reply:hover {
+            background: var(--bg-selected);
+            color: var(--brand-red);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-tertiary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        /* 系统通知全宽布局 */
+        .system-content-full {
+            background: var(--bg-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 系统通知分类卡片 - 横向排列 */
+        .system-categories-horizontal {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-white);
+        }
+
+        .system-category-card {
+            flex: 1;
+            padding: 20px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .system-category-card:hover {
+            background: var(--bg-selected);
+        }
+
+        .system-category-card.active {
+            background: var(--bg-selected);
+            border-color: var(--brand-red);
+        }
+
+        .system-icon-large {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .system-category-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .system-category-count {
+            font-size: 12px;
+            color: var(--brand-red);
+            font-weight: 600;
+        }
+
+        /* 系统通知列表 - 全宽 */
+        .system-list-full {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .system-notice-item {
+            display: flex;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .system-notice-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .system-notice-item.unread {
+            background: var(--bg-selected);
+        }
+
+        .notice-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 16px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .notice-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .notice-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notice-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .notice-user-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .notice-user-tag {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .notice-action {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .notice-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .notice-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .notice-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .notice-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-white);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notice-btn:hover {
+            border-color: var(--brand-red);
+            color: var(--brand-red);
+        }
+
+        .notice-preview-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-left: 16px;
+            background: var(--bg-light);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .notice-preview-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .quote-box {
+            padding: 10px 14px;
+            background: var(--bg-light);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            border-left: 3px solid var(--border-color);
+        }
+
+        /* 多选模式 */
+        .batch-mode .chat-list-item {
+            padding-left: 44px;
+        }
+
+        .chat-checkbox {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .batch-mode .chat-checkbox {
+            display: flex;
+        }
+
+        .chat-checkbox.checked {
+            background: var(--brand-red);
+            border-color: var(--brand-red);
+            color: white;
+        }
+
+        .batch-toolbar {
+            display: none;
+            padding: 12px 16px;
+            background: var(--bg-selected);
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .batch-mode .batch-toolbar {
+            display: flex;
+        }
+
+        .batch-mode .chat-toolbar {
+            display: none;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .user-search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .user-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧一级导航栏 -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo">书</div>
+                <span class="logo-text">小红书</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item active" onclick="switchMainNav('discover', this)">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">发现</span>
+                </div>
+                <div class="nav-item" onclick="switchMainNav('live', this)">
+                    <span class="nav-icon">📺</span>
+                    <span class="nav-text">直播</span>
+                </div>
+                <div class="nav-item" onclick="switchMainNav('publish', this)">
+                    <span class="nav-icon">➕</span>
+                    <span class="nav-text">发布</span>
+                </div>
+                <div class="nav-item" onclick="switchMainNav('message', this)">
+                    <span class="nav-icon">✉️</span>
+                    <span class="nav-unread-badge" id="navUnreadBadge">5</span>
+                    <span class="nav-text">消息</span>
+                </div>
+                <div class="nav-item" onclick="switchMainNav('me', this)">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">我</span>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="nav-item" style="margin: 0;" onclick="toggleMore()">
+                    <span class="nav-icon">☰</span>
+                    <span class="nav-text">更多</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <div class="main-wrapper">
+            <!-- 顶部搜索栏 -->
+            <header class="header">
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="搜索感兴趣的内容">
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <a href="#" class="action-btn">创作中心</a>
+                    <a href="#" class="action-btn">业务合作</a>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 发现页面 -->
+                <div id="discoverPage">
+                    <div class="discover-content">
+                        <div class="content-card">
+                            <div class="card-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <div class="card-info">
+                                <div class="card-title">产品经理如何通过"动嘴"画完原型图</div>
+                                <div class="card-meta">❤️ 969</div>
+                            </div>
+                        </div>
+                        <div class="content-card">
+                            <div class="card-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <div class="card-info">
+                                <div class="card-title">AI画原型，超简单，到Axure</div>
+                                <div class="card-meta">❤️ 36</div>
+                            </div>
+                        </div>
+                        <div class="content-card">
+                            <div class="card-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <div class="card-info">
+                                <div class="card-title">一种免费用AI生成可编辑原型方法</div>
+                                <div class="card-meta">❤️ 128</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消息页面 -->
+                <div id="messagePage" class="hidden">
+                    <!-- 顶部大tab -->
+                    <div class="message-page-header">
+                        <div class="message-main-tabs">
+                            <div class="message-main-tab active" id="mainTabPrivate" onclick="switchMainTab('private')">
+                                我的对话
+                                <span class="main-tab-badge" id="mainPrivateBadge">4</span>
+                            </div>
+                            <div class="message-main-tab" id="mainTabSystem" onclick="switchMainTab('system')">
+                                系统通知
+                                <span class="main-tab-badge" id="mainSystemBadge">1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 消息内容区 -->
+                    <div class="message-content-area">
+                        <!-- 我的对话布局 -->
+                        <div id="privateLayout" class="message-layout-private">
+                            <!-- 左侧列表 -->
+                            <div class="message-panel">
+                                <!-- 批量操作栏 -->
+                                <div class="batch-toolbar" id="batchToolbar">
+                                    <span id="selectedCount">已选中 0 条</span>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="toolbar-btn" onclick="selectAllChats()">全选</button>
+                                        <button class="toolbar-btn" onclick="batchMarkRead()" style="background: var(--brand-red); color: white; border: none;">标记已读</button>
+                                        <button class="toolbar-btn" onclick="batchDelete()" style="background: var(--brand-red); color: white; border: none;">删除</button>
+                                        <button class="toolbar-btn" onclick="exitBatchMode()">取消</button>
+                                    </div>
+                                </div>
+
+                                <!-- 普通工具栏 -->
+                                <div class="chat-toolbar" id="normalToolbar">
+                                    <div class="search-conversations">
+                                        <input type="text" placeholder="搜索对话或联系人" id="chatSearch" oninput="searchChats()">
+                                    </div>
+                                    
+                                    <div class="dropdown-wrapper">
+                                        <button class="dropdown-btn" onclick="toggleDropdown()">
+                                            <span id="currentFilter">全部</span>
+                                            <span>▼</span>
+                                        </button>
+                                        <div class="dropdown-menu" id="filterDropdown">
+                                            <div class="dropdown-item active" onclick="selectFilter('全部')">全部</div>
+                                            <div class="dropdown-item" onclick="selectFilter('未读')">未读</div>
+                                            <div class="dropdown-item" onclick="selectFilter('关注的人')">关注的人</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="toolbar-btn" onclick="enterBatchMode()">多选</button>
+                                    <button class="toolbar-btn new-chat-btn" onclick="openNewChatModal()">+ 新对话</button>
+                                </div>
+
+                                <!-- 对话列表 -->
+                                <div class="chat-list" id="privateList">
+                                    <div class="chat-list-item pinned unread" data-chat-id="1" onclick="openChat(1)">
+                                        <span class="pinned-tag">置顶</span>
+                                        <div class="chat-checkbox" onclick="toggleSelect(event, 1)"></div>
+                                        <div class="chat-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="avatar">
+                                        </div>
+                                        <div class="chat-info">
+                                            <div class="chat-name-row">
+                                                <span class="chat-name">热爱生活的May拾柒</span>
+                                                <span class="chat-time">10:30</span>
+                                            </div>
+                                            <div class="chat-preview-row">
+                                                <span class="chat-preview">请问这个产品的链接是什么呀？</span>
+                                                <span class="unread-count">3</span>
+                                            </div>
+                                        </div>
+                                        <div class="chat-actions">
+                                            <span class="action-icon" onclick="markRead(event, 1)">✓</span>
+                                            <span class="action-icon" onclick="topChat(event, 1)">📌</span>
+                                            <span class="action-icon" onclick="deleteChat(event, 1)">🗑</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-list-item unread" data-chat-id="2" onclick="openChat(2)">
+                                        <div class="chat-checkbox" onclick="toggleSelect(event, 2)"></div>
+                                        <div class="chat-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=2" alt="avatar">
+                                        </div>
+                                        <div class="chat-info">
+                                            <div class="chat-name-row">
+                                                <span class="chat-name">聆风的产品手记</span>
+                                                <span class="chat-time">昨天</span>
+                                            </div>
+                                            <div class="chat-preview-row">
+                                                <span class="chat-preview">教程在我的笔记合集里哦，你可以去看看～</span>
+                                                <span class="unread-count">1</span>
+                                            </div>
+                                        </div>
+                                        <div class="chat-actions">
+                                            <span class="action-icon" onclick="markRead(event, 2)">✓</span>
+                                            <span class="action-icon" onclick="topChat(event, 2)">📌</span>
+                                            <span class="action-icon" onclick="deleteChat(event, 2)">🗑</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-list-item" data-chat-id="3" onclick="openChat(3)">
+                                        <div class="chat-checkbox" onclick="toggleSelect(event, 3)"></div>
+                                        <div class="chat-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" alt="avatar">
+                                        </div>
+                                        <div class="chat-info">
+                                            <div class="chat-name-row">
+                                                <span class="chat-name">苏安</span>
+                                                <span class="chat-time">3天前</span>
+                                            </div>
+                                            <div class="chat-preview-row">
+                                                <span class="chat-preview">收到，谢谢分享！</span>
+                                            </div>
+                                        </div>
+                                        <div class="chat-actions">
+                                            <span class="action-icon" onclick="markRead(event, 3)">✓</span>
+                                            <span class="action-icon" onclick="topChat(event, 3)">📌</span>
+                                            <span class="action-icon" onclick="deleteChat(event, 3)">🗑</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右侧详情 -->
+                            <div class="chat-detail-panel" id="chatDetailPanel">
+                                <div class="chat-header">
+                                    <div class="chat-user-info">
+                                        <div class="chat-user-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="avatar" style="width: 100%; height: 100%;">
+                                        </div>
+                                        <div class="chat-user-meta">
+                                            <div class="chat-user-name" onclick="visitProfile()">热爱生活的May拾柒</div>
+                                            <div class="chat-status">
+                                                <span class="status-dot"></span>
+                                                <span>在线</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-header-actions">
+                                        <button class="header-action-btn follow-btn" onclick="toggleFollow()">关注</button>
+                                        <button class="header-action-btn" onclick="showMoreActions()">更多 ▼</button>
+                                    </div>
+                                </div>
+
+                                <div class="messages-container" id="messagesContainer">
+                                    <div class="messages-wrapper">
+                                        <div class="message-timestamp">昨天 14:30</div>
+                                        
+                                        <div class="message-row">
+                                            <div class="message-avatar">
+                                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="avatar" style="width: 100%; height: 100%;">
+                                            </div>
+                                            <div class="message-content">
+                                                <div class="message-bubble">你好呀，看到你分享的穿搭笔记，特别喜欢！</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="message-row own">
+                                            <div class="message-avatar">
+                                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=me" alt="avatar" style="width: 100%; height: 100%;">
+                                            </div>
+                                            <div class="message-content">
+                                                <div class="message-bubble">谢谢喜欢呀～有什么问题都可以问我哦</div>
+                                                <div class="message-status">已读</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="typing-indicator" id="typingIndicator">
+                                            <span>对方正在输入</span>
+                                            <div class="typing-dots">
+                                                <span class="typing-dot"></span>
+                                                <span class="typing-dot"></span>
+                                                <span class="typing-dot"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="input-area">
+                                    <div class="input-wrapper">
+                                        <div class="quick-replies">
+                                            <span class="quick-reply" onclick="sendQuickReply('请问具体是哪款产品？')">请问具体是哪款产品？</span>
+                                            <span class="quick-reply" onclick="sendQuickReply('教程在我的笔记合集里哦')">教程在我的笔记合集里哦</span>
+                                        </div>
+
+                                        <div class="input-toolbar">
+                                            <div class="tool-btn" title="表情">😊</div>
+                                            <div class="tool-btn" title="图片">📷</div>
+                                            <div class="tool-btn" title="文件">📎</div>
+                                            <div class="tool-btn" title="模板" onclick="openTemplateModal()">📋</div>
+                                        </div>
+
+                                        <div class="input-box">
+                                            <textarea class="text-input" id="messageInput" placeholder="输入消息..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+                                            <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>发送</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 系统通知布局 - 全宽平铺 -->
+                        <div id="systemLayout" class="message-layout-system hidden">
+                            <div class="system-content-full">
+                                <!-- 分类卡片 -->
+                                <div class="system-categories-horizontal">
+                                    <div class="system-category-card active" onclick="switchSystemCategory('comment', this)">
+                                        <div class="system-icon-large">💬</div>
+                                        <div class="system-category-name">评论和@</div>
+                                        <div class="system-category-count">3条新消息</div>
+                                    </div>
+                                    <div class="system-category-card" onclick="switchSystemCategory('like', this)">
+                                        <div class="system-icon-large">❤️</div>
+                                        <div class="system-category-name">赞和收藏</div>
+                                        <div class="system-category-count">12条新消息</div>
+                                    </div>
+                                    <div class="system-category-card" onclick="switchSystemCategory('follow', this)">
+                                        <div class="system-icon-large">👥</div>
+                                        <div class="system-category-name">新增关注</div>
+                                        <div class="system-category-count">5位新粉丝</div>
+                                    </div>
+                                </div>
+
+                                <!-- 全宽列表 -->
+                                <div class="system-list-full" id="systemList">
+                                    <div class="system-notice-item unread" data-category="comment">
+                                        <div class="notice-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=10" alt="avatar">
+                                        </div>
+                                        <div class="notice-content">
+                                            <div class="notice-header">
+                                                <span class="notice-user-name">沐水ttkx</span>
+                                                <span class="notice-user-tag">你的粉丝</span>
+                                            </div>
+                                            <div class="notice-action">评论了你的笔记 03-27</div>
+                                            <div class="notice-text">杭州可以陪拍的！</div>
+                                            <div class="notice-actions">
+                                                <button class="notice-btn">💬 回复</button>
+                                                <button class="notice-btn">❤️</button>
+                                            </div>
+                                        </div>
+                                        <div class="notice-preview-img">
+                                            <img src="https://picsum.photos/80/80?random=1" alt="preview">
+                                        </div>
+                                        <div class="notice-time">03-27</div>
+                                    </div>
+
+                                    <div class="system-notice-item" data-category="comment">
+                                        <div class="notice-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=11" alt="avatar">
+                                        </div>
+                                        <div class="notice-content">
+                                            <div class="notice-header">
+                                                <span class="notice-user-name">人鱼</span>
+                                                <span class="notice-user-tag">作者</span>
+                                            </div>
+                                            <div class="notice-action">回复了你的评论 03-27</div>
+                                            <div class="notice-text">可以 什么位置 私我绿🫧</div>
+                                            <div class="quote-box">请问明天下午可以吗</div>
+                                            <div class="notice-actions">
+                                                <button class="notice-btn">💬 回复</button>
+                                                <button class="notice-btn">❤️</button>
+                                            </div>
+                                        </div>
+                                        <div class="notice-preview-img">
+                                            <img src="https://picsum.photos/80/80?random=2" alt="preview">
+                                        </div>
+                                        <div class="notice-time">03-27</div>
+                                    </div>
+
+                                    <div class="system-notice-item" data-category="comment">
+                                        <div class="notice-avatar">
+                                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=12" alt="avatar">
+                                        </div>
+                                        <div class="notice-content">
+                                            <div class="notice-header">
+                                                <span class="notice-user-name">脆脆煎妮（杭州陪拍版</span>
+                                                <span class="notice-user-tag">作者</span>
+                                            </div>
+                                            <div class="notice-action">回复了你的评论 03-27</div>
+                                            <div class="notice-text">明天满了🥹后天可以</div>
+                                            <div class="quote-box">请问明天下午可以吗</div>
+                                            <div class="notice-actions">
+                                                <button class="notice-btn">💬 回复</button>
+                                                <button class="notice-btn">❤️</button>
+                                            </div>
+                                        </div>
+                                        <div class="notice-preview-img">
+                                            <img src="https://picsum.photos/80/80?random=3" alt="preview">
+                                        </div>
+                                        <div class="notice-time">03-27</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 弹窗 -->
+        <div class="modal-overlay" id="newChatModal" onclick="closeModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div class="modal-title">发起新对话</div>
+                    <div class="modal-close" onclick="closeNewChatModal()">✕</div>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="user-search-input" placeholder="搜索用户ID或昵称">
+                    <div class="user-list">
+                        <div class="user-item" onclick="selectUser(this)">
+                            <div class="chat-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=new1" alt="avatar">
+                            </div>
+                            <div class="chat-info">
+                                <div class="chat-name">设计爱好者小王</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="toolbar-btn" onclick="closeNewChatModal()">取消</button>
+                    <button class="toolbar-btn new-chat-btn" onclick="startNewChat()">发起对话</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="templateModal" onclick="closeModal(event)">
+            <div class="modal" onclick="event.stopPropagation()" style="width: 500px;">
+                <div class="modal-header">
+                    <div class="modal-title">快捷回复模板</div>
+                    <div class="modal-close" onclick="closeTemplateModal()">✕</div>
+                </div>
+                <div class="modal-body">
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <input type="text" id="templateName" placeholder="模板名称" style="flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                        <input type="text" id="templateContent" placeholder="模板内容" style="flex: 2; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                        <button class="toolbar-btn new-chat-btn" onclick="addTemplate()">新增</button>
+                    </div>
+                    <div id="templateList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMainTab = 'private';
+        let batchMode = false;
+        let selectedChats = new Set();
+        let templates = JSON.parse(localStorage.getItem('chatTemplates') || '[]');
+        let currentChatId = null;
+        let currentFilter = '全部';
+        let currentSystemCategory = 'comment';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTemplates();
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            messageInput.addEventListener('input', () => {
+                sendBtn.disabled = messageInput.value.trim() === '';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown-wrapper')) {
+                    document.getElementById('filterDropdown').classList.remove('show');
+                }
+            });
+
+            setTimeout(() => {
+                showTypingIndicator();
+            }, 3000);
+        });
+
+        function switchMainNav(nav, element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            
+            if (nav === 'discover') {
+                document.getElementById('discoverPage').classList.remove('hidden');
+                document.getElementById('messagePage').classList.add('hidden');
+            } else if (nav === 'message') {
+                document.getElementById('discoverPage').classList.add('hidden');
+                document.getElementById('messagePage').classList.remove('hidden');
+            } else {
+                const names = { 'live': '直播', 'publish': '发布', 'me': '我' };
+                alert(`切换到${names[nav]}页面`);
+                document.querySelectorAll('.nav-item')[0].click();
+            }
+        }
+
+        // 切换顶部大tab
+        function switchMainTab(tab) {
+            currentMainTab = tab;
+            document.querySelectorAll('.message-main-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab === 'private' ? 'mainTabPrivate' : 'mainTabSystem').classList.add('active');
+            
+            if (tab === 'system') {
+                document.getElementById('privateLayout').classList.add('hidden');
+                document.getElementById('systemLayout').classList.remove('hidden');
+            } else {
+                document.getElementById('systemLayout').classList.add('hidden');
+                document.getElementById('privateLayout').classList.remove('hidden');
+            }
+        }
+
+        function switchSystemCategory(category, element) {
+            currentSystemCategory = category;
+            
+            document.querySelectorAll('.system-category-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // 这里可以加载不同分类的数据
+            const items = document.querySelectorAll('#systemList .system-notice-item');
+            items.forEach(item => {
+                if (item.dataset.category === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleDropdown() {
+            document.getElementById('filterDropdown').classList.toggle('show');
+        }
+
+        function selectFilter(filter) {
+            currentFilter = filter;
+            document.getElementById('currentFilter').textContent = filter;
+            
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.textContent === filter) item.classList.add('active');
+            });
+            
+            document.getElementById('filterDropdown').classList.remove('show');
+            filterChats(filter);
+        }
+
+        function filterChats(filter) {
+            const items = document.querySelectorAll('#privateList .chat-list-item');
+            items.forEach(item => {
+                if (filter === '全部') {
+                    item.style.display = 'flex';
+                } else if (filter === '未读') {
+                    item.style.display = item.classList.contains('unread') ? 'flex' : 'none';
+                } else if (filter === '关注的人') {
+                    const id = parseInt(item.dataset.chatId);
+                    item.style.display = id <= 2 ? 'flex' : 'none';
+                }
+            });
+        }
+
+        function searchChats() {
+            const keyword = document.getElementById('chatSearch').value.toLowerCase();
+            const items = document.querySelectorAll('#privateList .chat-list-item');
+            
+            items.forEach(item => {
+                const name = item.querySelector('.chat-name').textContent.toLowerCase();
+                const preview = item.querySelector('.chat-preview').textContent.toLowerCase();
+                item.style.display = (name.includes(keyword) || preview.includes(keyword)) ? 'flex' : 'none';
+            });
+        }
+
+        function openChat(chatId) {
+            if (batchMode) return;
+            currentChatId = chatId;
+            
+            document.querySelectorAll('.chat-list-item').forEach(item => item.classList.remove('active'));
+            const item = document.querySelector(`[data-chat-id="${chatId}"]`);
+            if (item) {
+                item.classList.add('active');
+                item.classList.remove('unread');
+                const badge = item.querySelector('.unread-count');
+                if (badge) badge.style.display = 'none';
+                updateUnreadCount();
+            }
+            
+            setTimeout(() => {
+                const container = document.getElementById('messagesContainer');
+                container.scrollTop = container.scrollHeight;
+            }, 100);
+        }
+
+        function updateUnreadCount() {
+            const unreadItems = document.querySelectorAll('#privateList .chat-list-item.unread');
+            const count = unreadItems.length;
+            document.getElementById('mainPrivateBadge').textContent = count;
+            document.getElementById('privateBadge').textContent = count;
+            
+            const totalUnread = count + parseInt(document.getElementById('mainSystemBadge').textContent);
+            const navBadge = document.getElementById('navUnreadBadge');
+            navBadge.textContent = totalUnread;
+            if (totalUnread === 0) navBadge.style.display = 'none';
+        }
+
+        function markRead(event, chatId) {
+            event.stopPropagation();
+            const item = document.querySelector(`[data-chat-id="${chatId}"]`);
+            item.classList.remove('unread');
+            const badge = item.querySelector('.unread-count');
+            if (badge) badge.style.display = 'none';
+            updateUnreadCount();
+        }
+
+        function topChat(event, chatId) {
+            event.stopPropagation();
+            const item = document.querySelector(`[data-chat-id="${chatId}"]`);
+            const isPinned = item.classList.contains('pinned');
+            
+            if (isPinned) {
+                item.classList.remove('pinned');
+                item.querySelector('.pinned-tag')?.remove();
+            } else {
+                item.classList.add('pinned');
+                if (!item.querySelector('.pinned-tag')) {
+                    const tag = document.createElement('span');
+                    tag.className = 'pinned-tag';
+                    tag.textContent = '置顶';
+                    item.insertBefore(tag, item.firstChild);
+                }
+                document.getElementById('privateList').insertBefore(item, document.getElementById('privateList').firstChild);
+            }
+        }
+
+        function deleteChat(event, chatId) {
+            event.stopPropagation();
+            if (confirm('确定要删除这条对话吗？')) {
+                document.querySelector(`[data-chat-id="${chatId}"]`)?.remove();
+                updateUnreadCount();
+            }
+        }
+
+        function enterBatchMode() {
+            batchMode = true;
+            document.getElementById('privateList').classList.add('batch-mode');
+            selectedChats.clear();
+            updateSelectedCount();
+        }
+
+        function exitBatchMode() {
+            batchMode = false;
+            selectedChats.clear();
+            document.getElementById('privateList').classList.remove('batch-mode');
+            document.querySelectorAll('.chat-checkbox').forEach(cb => {
+                cb.classList.remove('checked');
+                cb.innerHTML = '';
+            });
+        }
+
+        function toggleSelect(event, chatId) {
+            event.stopPropagation();
+            const checkbox = event.target;
+            
+            if (selectedChats.has(chatId)) {
+                selectedChats.delete(chatId);
+                checkbox.classList.remove('checked');
+                checkbox.innerHTML = '';
+            } else {
+                selectedChats.add(chatId);
+                checkbox.classList.add('checked');
+                checkbox.innerHTML = '✓';
+            }
+            
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selectedCount').textContent = `已选中 ${selectedChats.size} 条`;
+        }
+
+        function selectAllChats() {
+            const visibleItems = document.querySelectorAll('#privateList .chat-list-item:not([style*="display: none"])');
+            visibleItems.forEach(item => {
+                const id = item.dataset.chatId;
+                selectedChats.add(id);
+                const cb = item.querySelector('.chat-checkbox');
+                cb.classList.add('checked');
+                cb.innerHTML = '✓';
+            });
+            updateSelectedCount();
+        }
+
+        function batchMarkRead() {
+            selectedChats.forEach(id => {
+                const item = document.querySelector(`[data-chat-id="${id}"]`);
+                if (item) {
+                    item.classList.remove('unread');
+                    const badge = item.querySelector('.unread-count');
+                    if (badge) badge.style.display = 'none';
+                }
+            });
+            updateUnreadCount();
+            exitBatchMode();
+        }
+
+        function batchDelete() {
+            if (confirm(`确定要删除选中的 ${selectedChats.size} 条对话吗？`)) {
+                selectedChats.forEach(id => {
+                    document.querySelector(`[data-chat-id="${id}"]`)?.remove();
+                });
+                updateUnreadCount();
+                exitBatchMode();
+            }
+        }
+
+        function openNewChatModal() {
+            document.getElementById('newChatModal').classList.add('active');
+        }
+
+        function closeNewChatModal() {
+            document.getElementById('newChatModal').classList.remove('active');
+        }
+
+        function closeModal(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        function selectUser(element) {
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function startNewChat() {
+            const selected = document.querySelector('.user-item.selected');
+            if (selected) {
+                closeNewChatModal();
+                alert('新对话已创建');
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            const wrapper = document.querySelector('.messages-wrapper');
+            const typingIndicator = document.getElementById('typingIndicator');
+            
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row own';
+            messageRow.innerHTML = `
+                <div class="message-avatar">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=me" alt="avatar" style="width: 100%; height: 100%;">
+                </div>
+                <div class="message-content">
+                    <div class="message-bubble">${content}</div>
+                    <div class="message-status">已读</div>
+                </div>
+            `;
+            
+            wrapper.insertBefore(messageRow, typingIndicator);
+            
+            input.value = '';
+            input.style.height = 'auto';
+            document.getElementById('sendBtn').disabled = true;
+            
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+            
+            setTimeout(() => {
+                showTypingIndicator();
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    addReplyMessage('收到你的消息啦！');
+                }, 2000);
+            }, 1000);
+        }
+
+        function addReplyMessage(content) {
+            const wrapper = document.querySelector('.messages-wrapper');
+            const typingIndicator = document.getElementById('typingIndicator');
+            
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row';
+            messageRow.innerHTML = `
+                <div class="message-avatar">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${currentChatId || 1}" alt="avatar" style="width: 100%; height: 100%;">
+                </div>
+                <div class="message-content">
+                    <div class="message-bubble">${content}</div>
+                </div>
+            `;
+            
+            wrapper.insertBefore(messageRow, typingIndicator);
+            
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').classList.add('active');
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('active');
+        }
+
+        function sendQuickReply(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('sendBtn').disabled = false;
+            sendMessage();
+        }
+
+        function openTemplateModal() {
+            document.getElementById('templateModal').classList.add('active');
+            renderTemplates();
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('templateModal').classList.remove('active');
+        }
+
+        function loadTemplates() {
+            if (templates.length === 0) {
+                templates = [
+                    { name: '询问产品', content: '请问具体是哪款产品？' },
+                    { name: '查看教程', content: '教程在我的笔记合集里哦' },
+                    { name: '合作指引', content: '合作请通过右上角业务合作入口提交意向' }
+                ];
+                saveTemplates();
+            }
+        }
+
+        function saveTemplates() {
+            localStorage.setItem('chatTemplates', JSON.stringify(templates));
+        }
+
+        function renderTemplates() {
+            const list = document.getElementById('templateList');
+            list.innerHTML = templates.map((t, i) => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; margin-bottom: 4px;">${t.name}</div>
+                        <div style="font-size: 13px; color: #666;">${t.content}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="toolbar-btn" onclick="useTemplate(${i})">使用</button>
+                        <button class="toolbar-btn" onclick="deleteTemplate(${i})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addTemplate() {
+            const name = document.getElementById('templateName').value;
+            const content = document.getElementById('templateContent').value;
+            
+            if (name && content) {
+                templates.push({ name, content });
+                saveTemplates();
+                renderTemplates();
+                document.getElementById('templateName').value = '';
+                document.getElementById('templateContent').value = '';
+            }
+        }
+
+        function useTemplate(index) {
+            document.getElementById('messageInput').value = templates[index].content;
+            document.getElementById('sendBtn').disabled = false;
+            closeTemplateModal();
+        }
+
+        function deleteTemplate(index) {
+            templates.splice(index, 1);
+            saveTemplates();
+            renderTemplates();
+        }
+
+        function visitProfile() {
+            window.open('#', '_blank');
+        }
+
+        function toggleFollow() {
+            const btn = document.querySelector('.follow-btn');
+            if (btn.textContent === '关注') {
+                btn.textContent = '已关注';
+                btn.classList.remove('follow-btn');
+                btn.style.background = 'white';
+                btn.style.color = '#666';
+            } else {
+                btn.textContent = '关注';
+                btn.classList.add('follow-btn');
+                btn.style.background = 'var(--brand-red)';
+                btn.style.color = 'white';
+            }
+        }
+
+        function showMoreActions() {
+            const choice = prompt('选择操作：\n1. 清空对话\n2. 举报用户\n3. 拉黑用户\n4. 设置消息免打扰\n5. 快捷回复模板');
+            if (choice === '5') openTemplateModal();
+        }
+
+        function toggleMore() {
+            alert('更多菜单');
+        }
+    </script>
+</body>
+</html>
